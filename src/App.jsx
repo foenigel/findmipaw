@@ -9,6 +9,7 @@ import logo from './components/images/findmipawlogo.png';
 import heroImage from './components/images/hero-dog-image.png';
 import strayDogOne from './components/images/stray-dog1.jpg';
 import strayDogTwo from './components/images/stray-dog2.jpg';
+import LoadingScreen from './components/LoadingScreen.jsx';
 
 async function compressImage(file) {
   return new Promise((resolve, reject) => {
@@ -99,53 +100,15 @@ function generateRecoveryKey() {
   return `FMP-${hex.match(/.{1,4}/g).join('-')}`;
 }
 
-
-const initialDogs = [
-  {
-    id: 'brownie-01',
-    name: 'Brownie',
-    breed: 'Mixed breed',
-    color: 'Brown',
-    lastSeen: 'Orange Walk Town, Belize',
-    date: 'Today',
-    details: 'Friendly with family. May be frightened and hiding.',
-    lat: 18.081,
-    lng: -88.558,
-    status: 'Missing',
-    sightings: [
-      {
-        id: 1,
-        lat: 18.085,
-        lng: -88.552,
-        note: 'Possible sighting near the main road.',
-        time: '2 hours ago',
-      },
-    ],
-  },
-  {
-    id: 'max-02',
-    name: 'Max',
-    breed: 'Mixed breed',
-    color: 'Black and white',
-    lastSeen: 'Belmopan, Belize',
-    date: 'Yesterday',
-    details: 'Medium-sized dog wearing a red collar.',
-    lat: 17.251,
-    lng: -88.767,
-    status: 'Missing',
-    sightings: [],
-  },
-];
-
 function App() {
-  const [dogs, setDogs] = useState(initialDogs);
+  const [dogs, setDogs] = useState([]);
   const [confirmation, setConfirmation] = useState(null);
   const [darkMode, setDarkMode] = useState(() => {
   return localStorage.getItem('findmipaw-theme') === 'dark';
 });
   const [selectedId, setSelectedId] = useState(
-    new URLSearchParams(window.location.search).get('dog') || initialDogs[0].id
-  );
+  new URLSearchParams(window.location.search).get('dog') || ''
+);
   const [addingSighting, setAddingSighting] = useState(false);
   const [sighting, setSighting] = useState({
   note: '',
@@ -238,6 +201,7 @@ useEffect(() => {
     if (error) {
       console.error('Could not load dog reports:', error);
       setNotice('Could not load reports. Please refresh and try again.');
+      setDogs([]);
       setLoadingDogs(false);
       return;
     }
@@ -847,7 +811,7 @@ async function submitDog(event) {
 
 
 if (loadingDogs) {
-  return <div className="app">Loading FindMiPaw...</div>;
+  return <LoadingScreen />;
 }
 
 if (!dog) {
@@ -1123,9 +1087,11 @@ if (!dog) {
 
     <div className="active-feed-info">
       <span className="active-feed-badge">
-        ACTIVE FEED
+        <i class="fa-solid fa-users"></i>  COMMUNITY FEED
       </span>
-      <p>{dogs.length} community reports</p>
+      <p>
+      {dogs.length} community {dogs.length === 1 ? 'report' : 'reports'}
+    </p>
     </div>
   </div>
               <span className="paw-badge"><i class="fa-solid fa-list-ul"></i></span>
@@ -1164,21 +1130,21 @@ if (!dog) {
 
           <section className="report-panel">
             <div className={`report-heading ${dog.status === 'Found' ? 'is-found' : ''}`}>
-              <div>
+              <div className="report-heading-main">
                 {dog.status === 'Found' ? (
-  <span className="found-label">🐶 DOG FOUND</span>
-) : (
-  <span className="missing-label">
-    <span /> MISSING DOG
-  </span>
-)}
+                  <span className="found-label">🐶 DOG FOUND</span>
+                ) : (
+                  <span className="missing-label">
+                    <span /> MISSING DOG
+                  </span>
+                )}
                 <h2>{dog.name}</h2>
                 <p>{dog.lastSeen}</p>
               </div>
               <div className="report-actions">
-  <button className="share-button" onClick={shareReport}>
-    <i class="fa-solid fa-share-nodes"></i> Share report
-  </button>
+        <button className="share-button" onClick={shareReport}>
+          <i class="fa-solid fa-share-nodes"></i> Share report
+        </button>
 
   <FoundStatus
     dog={dog}
@@ -1288,9 +1254,8 @@ if (!dog) {
                   .reverse()
                   .map((item) => (
                     <div className="sighting-item" key={item.id}>
-                     <i class="fa-regular fa-message"></i>
                       <div className="sighting-card">
-                        <strong>Possible sighting</strong>
+                        <strong><i class="fa-regular fa-message"></i> Possible sighting</strong>
                         <p>{item.note}</p>
                         {item.photo && (
                           <img
@@ -1688,6 +1653,7 @@ if (!dog) {
         <strong>{recoveryKeyToShow}</strong>
       </p>
 
+        <div className="recovery-key-actions">
       <button
         type="button"
         className="primary-button"
@@ -1714,6 +1680,7 @@ if (!dog) {
       >
         I've saved my key
       </button>
+      </div>
     </div>
   </div>
 )}

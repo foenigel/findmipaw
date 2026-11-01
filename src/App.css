@@ -203,7 +203,7 @@ textarea:focus-visible {
 }
 
 .help-card i {
-    color: #ff6f42;
+    color: #f89110;
 }
 .paw-badge {
     display: grid;
@@ -280,13 +280,14 @@ textarea:focus-visible {
   flex-shrink: 0;
 }
 .help-card {
-  margin-top: 20px;
-  padding: 17px;
-  border-radius: 11px;
-  background: #fffaf6;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
+    margin-top: 20px;
+    padding: 17px;
+    border-radius: 11px;
+    background: #fff0e2;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    border: 1px solid #f89110;
 }
 .help-card > span {
   font-size: 22px;
@@ -495,6 +496,13 @@ i.fa-solid.fa-street-view {
   width: 100%;
 }
 
+.recovery-key-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    margin-top: 8px;
+}
+
 .button-main {
   display: flex;
   align-items: center;
@@ -541,6 +549,7 @@ i.fa-solid.fa-street-view {
   color: #67766c;
   line-height: 1.5;
   order: 3;
+  text-align: left;
 }
 .sighting-item small {
   color: #8a968e;
@@ -677,12 +686,15 @@ footer span:first-child {
   background: #fbfcfb;
   color: #20332c;
 }
+.recovery-key-actions button.share-button {
+    padding: 12px;
+}
+.report-heading-main {
+    text-align: left;
+}
 .modal textarea {
   min-height: 95px;
   resize: vertical;
-}
-.modal .primary-button {
-  margin-top: 8px;
 }
 .form-hint {
   font-size: 11px;
@@ -1114,6 +1126,8 @@ footer span:first-child {
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
+  width: 100%;
+  max-width: 250px;
 }
 
 .report-actions .share-button,
@@ -1221,6 +1235,7 @@ img.stray-dog-two {
     letter-spacing: 0.7px;
     border: 1px solid #f89110;
     line-height: 22px;
+    gap: 4px;
 }
 
 .active-feed-info p {
@@ -1399,4 +1414,49 @@ img.stray-dog-two {
 .theme-toggle:focus-visible {
     outline: 3px solid rgba(248, 145, 16, 0.3);
     outline-offset: 3px;
+}
+
+.loading-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--background, #fff);
+  color: var(--text, #222);
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(34, 197, 94, 0.15);
+  border-top-color: #22c55e;
+  border-radius: 50%;
+  animation: loading-rotate 0.8s linear infinite;
+  margin-bottom: 24px;
+}
+
+.loading-screen h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #f89110;
+}
+
+.loading-screen p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  opacity: 0.65;
+}
+
+@keyframes loading-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
 }
