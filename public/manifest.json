@@ -1,0 +1,11 @@
+
+{
+  "name": "FindMiPaw",
+  "short_name": "FindMiPaw",
+  "description": "Helping reunite missing dogs with their families.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#16a36a"
+}

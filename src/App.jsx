@@ -100,6 +100,18 @@ function generateRecoveryKey() {
   return `FMP-${hex.match(/.{1,4}/g).join('-')}`;
 }
 
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+
+  return Uint8Array.from(rawData, (char) => char.charCodeAt(0));
+}
+
+
 function App() {
   const [dogs, setDogs] = useState([]);
   const [confirmation, setConfirmation] = useState(null);
@@ -129,6 +141,7 @@ const [newDog, setNewDog] = useState({
 });
   const [loadingDogs, setLoadingDogs] = useState(true);
   const [recoveryKeyToShow, setRecoveryKeyToShow] = useState('');
+  const [recoveryDogIdToShow, setRecoveryDogIdToShow] = useState('');
   const mapElement = useRef(null);
   const miniMapElement = useRef(null);
   const miniMapRef = useRef(null);
@@ -670,6 +683,98 @@ async function submitSighting(event) {
 }
 
 
+async function enableDogNotifications() {
+  try {
+    if (
+      !('serviceWorker' in navigator) ||
+      !('PushManager' in window) ||
+      !('Notification' in window)
+    ) {
+      throw new Error(
+        'Push notifications are not supported by this browser.'
+      );
+    }
+
+    const publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+
+    if (!publicKey) {
+      throw new Error('Notification configuration is missing.');
+    }
+
+    if (!recoveryDogIdToShow || !recoveryKeyToShow) {
+      throw new Error('Your report information is missing.');
+    }
+
+    // Ask permission only after the reporter taps the button.
+    const permission = await Notification.requestPermission();
+
+    if (permission !== 'granted') {
+      throw new Error(
+        'Notification permission was not granted. You can enable it in your browser settings.'
+      );
+    }
+
+    // Get the existing registered service worker.
+    const registration = await navigator.serviceWorker.ready;
+
+    // Reuse an existing subscription if one already exists.
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+    }
+
+    // Save the subscription against this dog report.
+    const { data, error } = await supabase.functions.invoke(
+      'dog-notifications',
+      {
+        body: {
+          action: 'subscribe',
+          dogId: recoveryDogIdToShow,
+          recoveryKey: recoveryKeyToShow,
+          subscription: subscription.toJSON(),
+        },
+      }
+    );
+
+    if (error) {
+      let message = error.message;
+
+      try {
+        const responseBody = await error.context?.json();
+
+        if (responseBody?.error) {
+          message = responseBody.error;
+        }
+      } catch {
+        // Keep the original error.
+      }
+
+      throw new Error(message);
+    }
+
+    if (!data?.success) {
+      throw new Error(
+        data?.error || 'Could not enable notifications.'
+      );
+    }
+
+    setNotice(
+      'Notifications enabled! You will be alerted when someone reports a sighting. 🔔'
+    );
+
+  } catch (error) {
+    console.error('Could not enable notifications:', error);
+
+    setNotice(
+      error.message || 'Could not enable notifications. Please try again.'
+    );
+  }
+}
+
 
 async function submitDog(event) {
   event.preventDefault();
@@ -787,6 +892,7 @@ async function submitDog(event) {
     setShowReportForm(false);
 
     // 5. Show the recovery key once.
+    setRecoveryDogIdToShow(data.id);
     setRecoveryKeyToShow(recoveryKey);
 
     setNotice('Report saved successfully! 🐾');
@@ -1653,6 +1759,21 @@ if (!dog) {
         <strong>{recoveryKeyToShow}</strong>
       </p>
 
+        
+      <button
+        type="button"
+        className="primary-button"
+        onClick={enableDogNotifications}
+        style={{ marginBottom: '12px' }}
+      >
+        <i className="fa-solid fa-bell"></i>
+        Enable sighting notifications
+      </button>
+
+      <p className="form-hint">
+        Optional: Get notified when someone reports a sighting of your dog.
+      </p>
+
         <div className="recovery-key-actions">
       <button
         type="button"
@@ -1676,7 +1797,10 @@ if (!dog) {
       <button
         type="button"
         className="share-button"
-        onClick={() => setRecoveryKeyToShow('')}
+        onClick={() => {
+          setRecoveryKeyToShow('');
+          setRecoveryDogIdToShow('');
+        }}
       >
         I've saved my key
       </button>
