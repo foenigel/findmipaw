@@ -86,6 +86,20 @@ async function compressImage(file) {
   });
 }
 
+
+function generateRecoveryKey() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+
+  const hex = Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
+
+  return `FMP-${hex.match(/.{1,4}/g).join('-')}`;
+}
+
+
 const initialDogs = [
   {
     id: 'brownie-01',
@@ -151,6 +165,7 @@ const [newDog, setNewDog] = useState({
   lng: null,
 });
   const [loadingDogs, setLoadingDogs] = useState(true);
+  const [recoveryKeyToShow, setRecoveryKeyToShow] = useState('');
   const mapElement = useRef(null);
   const miniMapElement = useRef(null);
   const miniMapRef = useRef(null);
@@ -176,6 +191,22 @@ const [newDog, setNewDog] = useState({
     onConfirm,
   });
 }
+
+useEffect(() => {
+  if (!notice) return;
+
+  // Keep errors and action-required messages visible.
+  const needsAttention =
+    /could not|couldn't|unable|denied|failed|please|error/i.test(notice);
+
+  if (needsAttention) return;
+
+  const timeout = setTimeout(() => {
+    setNotice('');
+  }, 3500);
+
+  return () => clearTimeout(timeout);
+}, [notice]);
 
   useEffect(() => {
   async function loadDogs() {
@@ -437,6 +468,7 @@ useEffect(() => {
     window.history.replaceState({}, '', url);
   }
 
+
 function markDogFound() {
   if (!dog) return;
 
@@ -444,72 +476,63 @@ function markDogFound() {
 
   confirmAction({
     title: 'Has this dog been found?',
-    message: `Has ${dogToDelete.name} been found and safely reunited with their family? This will permanently delete their report and associated photos.`,
-    confirmText: 'Yes, delete report',
-    onConfirm: () => deleteDogReport(dogToDelete),
+    message: `Has ${dogToDelete.name} been found and safely reunited with their family? You will need the report's recovery key to permanently delete it and its associated photos.`,
+    confirmText: 'Continue',
+    onConfirm: () => {
+      const recoveryKey = window.prompt(
+        `Enter the recovery key for ${dogToDelete.name}'s report:`
+      );
+
+      if (recoveryKey === null) return;
+
+      if (!recoveryKey.trim()) {
+        setNotice('Please enter the recovery key.');
+        return;
+      }
+
+      deleteDogReport(dogToDelete, recoveryKey);
+    },
   });
 }
 
-async function deleteDogReport(dogToDelete) {
+async function deleteDogReport(dogToDelete, recoveryKey) {
   try {
-    // 1. Delete associated sightings.
-    const { error: sightingsError } = await supabase
-      .from('sightings')
-      .delete()
-      .eq('dog_id', dogToDelete.id);
-
-    if (sightingsError) throw sightingsError;
-
-    // 2. Delete the dog report.
-    const { error: dogError } = await supabase
-      .from('dogs')
-      .delete()
-      .eq('id', dogToDelete.id);
-
-    if (dogError) throw dogError;
-
-    // 3. Collect the dog's photo and sighting photos.
-    const photoUrls = [
-      dogToDelete.photo,
-      ...dogToDelete.sightings.map((item) => item.photo),
-    ].filter(Boolean);
-
-    // 4. Remove uploaded photos from Supabase Storage.
-    const storageMarker = '/storage/v1/object/public/dog-photos/';
-
-    const photoPaths = photoUrls
-      .map((url) => {
-        const index = url.indexOf(storageMarker);
-
-        if (index === -1) return null;
-
-        return decodeURIComponent(
-          url.substring(index + storageMarker.length).split('?')[0]
-        );
-      })
-      .filter(Boolean);
-
-    let photoCleanupFailed = false;
-
-    if (photoPaths.length > 0) {
-      const { error: storageError } = await supabase.storage
-        .from('dog-photos')
-        .remove([...new Set(photoPaths)]);
-
-      if (storageError) {
-        console.error('Could not delete uploaded photos:', storageError);
-        photoCleanupFailed = true;
+    const { data, error } = await supabase.functions.invoke(
+      'dog-reports',
+      {
+        body: {
+          action: 'delete',
+          dogId: dogToDelete.id,
+          recoveryKey,
+        },
       }
+    );
+
+    if (error) {
+      let message = error.message;
+
+      try {
+        const responseBody = await error.context?.json();
+        if (responseBody?.error) {
+          message = responseBody.error;
+        }
+      } catch {
+        // Keep the original error message.
+      }
+
+      throw new Error(message);
     }
 
-    // 5. Remove the report from the feed.
+    if (!data?.success) {
+      throw new Error(data?.error || 'Could not delete the report.');
+    }
+
     const remainingDogs = dogs.filter(
       (item) => item.id !== dogToDelete.id
     );
 
     setDogs(remainingDogs);
 
-    // 6. Select another report if one exists.
     if (remainingDogs.length > 0) {
       const nextDog = remainingDogs[0];
 
@@ -527,19 +550,18 @@ async function deleteDogReport(dogToDelete) {
     }
 
     setNotice(
-      photoCleanupFailed
-        ? `${dogToDelete.name}'s report was deleted, but some photos could not be removed.`
-        : `${dogToDelete.name}'s report has been permanently deleted. 💚`
+      `${dogToDelete.name}'s report and associated photos have been permanently deleted. 💚`
     );
 
   } catch (error) {
     console.error('Could not delete dog report:', error);
 
     setNotice(
-      `Could not delete ${dogToDelete.name}'s report. Please try again.`
+      error.message || `Could not delete ${dogToDelete.name}'s report.`
     );
   }
 }
+
 
 async function shareReport() {
   const url = new URL(window.location.href);
@@ -684,26 +706,29 @@ async function submitSighting(event) {
 }
 
 
+
 async function submitDog(event) {
   event.preventDefault();
 
   if (newDog.lat == null || newDog.lng == null) {
-  setNotice('Please pin the last-seen location on the map before submitting.');
-  return;
-}
+    setNotice('Please pin the last-seen location on the map before submitting.');
+    return;
+  }
 
   let photoUrl = null;
+  let photoPath = null;
 
-  // Upload the compressed image to Supabase Storage.
-  if (newDog.photo) {
-    try {
+  try {
+    // 1. Upload the optional dog photo.
+    if (newDog.photo) {
       const response = await fetch(newDog.photo);
       const photoBlob = await response.blob();
-      const filePath = `dogs/${crypto.randomUUID()}.jpg`;
+
+      photoPath = `dogs/${crypto.randomUUID()}.jpg`;
 
       const { error: uploadError } = await supabase.storage
         .from('dog-photos')
-        .upload(filePath, photoBlob, {
+        .upload(photoPath, photoBlob, {
           contentType: 'image/jpeg',
           upsert: false,
         });
@@ -712,73 +737,112 @@ async function submitDog(event) {
 
       const { data: urlData } = supabase.storage
         .from('dog-photos')
-        .getPublicUrl(filePath);
+        .getPublicUrl(photoPath);
 
       photoUrl = urlData.publicUrl;
-    } catch (error) {
-      console.error('Photo upload failed:', error);
-      setNotice(`Photo upload failed: ${error.message}`);
-      return;
     }
-  }
 
-  // Save the report with its photo URL.
-  const { data, error } = await supabase
-    .from('dogs')
-    .insert({
-      name: newDog.name.trim(),
-      breed: 'Not specified',
-      color: newDog.color.trim(),
-      last_seen: newDog.lastSeen.trim(),
-      last_seen_lat: newDog.lat,
-      last_seen_lng: newDog.lng,
-      details: newDog.details.trim(),
-      photo_url: photoUrl,
-      status: 'Missing',
-    })
-    .select()
-    .single();
+    // 2. Generate the report's recovery key.
+    const recoveryKey = generateRecoveryKey();
 
-  if (error) {
+    // 3. Create the report and register its recovery key securely.
+    const { data: result, error } = await supabase.functions.invoke(
+      'dog-reports',
+      {
+        body: {
+          action: 'create',
+          recoveryKey,
+          dog: {
+            name: newDog.name.trim(),
+            breed: 'Not specified',
+            color: newDog.color.trim(),
+            last_seen: newDog.lastSeen.trim(),
+            last_seen_lat: newDog.lat,
+            last_seen_lng: newDog.lng,
+            details: newDog.details.trim(),
+            photo_url: photoUrl,
+          },
+        },
+      }
+    );
+
+    if (error) {
+      let message = error.message;
+
+      try {
+        const responseBody = await error.context?.json();
+        if (responseBody?.error) {
+          message = responseBody.error;
+        }
+      } catch {
+        // Keep the original error message.
+      }
+
+      throw new Error(message);
+    }
+
+    if (!result?.success || !result?.dog) {
+      throw new Error(result?.error || 'Could not create the report.');
+    }
+
+    const data = result.dog;
+
+    // 4. Add the new report to the app.
+    const created = {
+      id: data.id,
+      name: data.name,
+      breed: data.breed || 'Not specified',
+      color: data.color || '',
+      lastSeen: data.last_seen,
+      date: new Date(data.created_at).toLocaleDateString(),
+      details: data.details || '',
+      photo: data.photo_url || '',
+      lat: data.last_seen_lat,
+      lng: data.last_seen_lng,
+      status: data.status,
+      sightings: [],
+    };
+
+    setDogs((current) => [created, ...current]);
+    setSelectedId(created.id);
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('dog', created.id);
+    window.history.replaceState({}, '', url);
+
+    setNewDog({
+      name: '',
+      color: '',
+      lastSeen: '',
+      details: '',
+      photo: '',
+      lat: null,
+      lng: null,
+    });
+
+    setShowReportForm(false);
+
+    // 5. Show the recovery key once.
+    setRecoveryKeyToShow(recoveryKey);
+
+    setNotice('Report saved successfully! 🐾');
+
+  } catch (error) {
     console.error('Could not create dog report:', error);
+
+    // Clean up the uploaded photo if report creation failed.
+    if (photoPath) {
+      const { error: cleanupError } = await supabase.storage
+        .from('dog-photos')
+        .remove([photoPath]);
+
+      if (cleanupError) {
+        console.error('Could not clean up uploaded photo:', cleanupError);
+      }
+    }
+
     setNotice(`Could not create report: ${error.message}`);
-    return;
   }
-
-  const created = {
-    id: data.id,
-    name: data.name,
-    breed: data.breed || 'Not specified',
-    color: data.color || '',
-    lastSeen: data.last_seen,
-    date: new Date(data.created_at).toLocaleDateString(),
-    details: data.details || '',
-    photo: data.photo_url || '',
-    lat: data.last_seen_lat,
-    lng: data.last_seen_lng,
-    status: data.status,
-    sightings: [],
-  };
-
-  setDogs((current) => [created, ...current]);
-  setSelectedId(created.id);
-
-  const url = new URL(window.location.href);
-  url.searchParams.set('dog', created.id);
-  window.history.replaceState({}, '', url);
-
-  setNewDog({
-    name: '',
-    color: '',
-    lastSeen: '',
-    details: '',
-    photo: '',
-    lat: null,
-    lng: null,
-  });
-
-  setShowReportForm(false);
-  setNotice('Report saved successfully! 🐾');
 }
 
 
@@ -918,7 +982,7 @@ if (!dog) {
     );
   }}
 >
-  <i class="fa-solid fa-location-dot"></i> Use my current location
+  <i class="fa-solid fa-street-view"></i> Use my current location 
 </button>
 
 <p className="form-hint">
@@ -1145,12 +1209,19 @@ if (!dog) {
             </div>
 
             <div className="map-title">
-              <span className="live-badge"><i class="fa-solid fa-route"></i></span>
+              <span className="live-badge">
+                <i className="fa-solid fa-route"></i>
+              </span>
+
               <div className="map-title-text">
                 <h3>Community sightings map</h3>
-                <p>Tap the map where you spotted the dog.</p>
+                <p>Where did you see this dog?</p>
               </div>
             </div>
+
+            <p className="map-instructions">
+              Choose how you'd like to share the location.
+            </p>
 
             <button
               type="button"
@@ -1170,7 +1241,9 @@ if (!dog) {
               });
               }}
             >
-              <i class="fa-solid fa-location-dot"></i> Use my current location
+              <span className="button-main">
+              <i class="fa-solid fa-street-view"></i> Use my current location</span>
+              <span className="button-hint">Quickly detect where you are</span>
             </button>
 
             <div className="map-container" ref={mapElement} />
@@ -1184,7 +1257,8 @@ if (!dog) {
               </span>
             </div>
 
-            <button
+           <button
+              type="button"
               className="primary-button sighting-button"
               onClick={() => {
                 setAddingSighting(false);
@@ -1193,7 +1267,13 @@ if (!dog) {
                 setNotice('Tap the map at the exact location of the sighting.');
               }}
             >
-              <i class="fa-solid fa-street-view"></i> Report a sighting
+              <span className="button-main">
+                <i className="fa-solid fa-location-dot"></i>
+                Choose a different location
+              </span>
+              <span className="button-hint">
+                Select where you spotted the dog on the map
+              </span>
             </button>
 
             <div className="sightings-list">
@@ -1499,7 +1579,7 @@ if (!dog) {
     );
   }}
 >
-  <i class="fa-solid fa-location-dot"></i> Use my current location
+  <i class="fa-solid fa-street-view"></i> Use my current location
 </button>
 
 
@@ -1581,6 +1661,64 @@ if (!dog) {
     </div>
   </div>
 )}
+
+
+{recoveryKeyToShow && (
+  <div className="modal-backdrop">
+    <div className="modal">
+      <span className="eyebrow">KEEP THIS KEY SAFE</span>
+
+      <h2>Your recovery key</h2>
+
+      <p className="modal-intro">
+        Save this key somewhere safe. You'll need it to permanently
+        delete this report when your dog is found. It cannot be
+        retrieved from the app later.
+      </p>
+
+      <p
+        style={{
+          padding: '16px',
+          background: 'var(--input-bg, #f2f2f2)',
+          borderRadius: '10px',
+          textAlign: 'center',
+          overflowWrap: 'anywhere',
+        }}
+      >
+        <strong>{recoveryKeyToShow}</strong>
+      </p>
+
+      <button
+        type="button"
+        className="primary-button"
+        onClick={async () => {
+          try {
+            if (!navigator.clipboard?.writeText) {
+              throw new Error('Clipboard unavailable');
+            }
+
+            await navigator.clipboard.writeText(recoveryKeyToShow);
+            setNotice('Recovery key copied! Keep it somewhere safe.');
+          } catch {
+            setNotice('Please select and copy the recovery key manually.');
+          }
+        }}
+      >
+        <i className="fa-regular fa-copy"></i> Copy recovery key
+      </button>
+
+      <button
+        type="button"
+        className="share-button"
+        onClick={() => setRecoveryKeyToShow('')}
+      >
+        I've saved my key
+      </button>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 }

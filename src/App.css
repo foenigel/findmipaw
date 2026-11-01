@@ -487,7 +487,25 @@ i.fa-solid.fa-street-view {
   background: #73b4ff;
 }
 .sighting-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   width: 100%;
+}
+
+.button-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.button-hint {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.85;
 }
 .sightings-list {
   padding-top: 24px;
@@ -528,6 +546,13 @@ i.fa-solid.fa-street-view {
   color: #8a968e;
   font-size: 10px;
   order: 4;
+}
+p.map-instructions {
+    color: #5f5f69;
+    font-size: 11px;
+    line-height: 20px;
+    margin: 14px auto;
+    max-width: 400px;
 }
 
 .pin-wrapper {
