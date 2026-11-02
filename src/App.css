@@ -98,6 +98,54 @@ textarea:focus-visible {
   color: #554738;
   line-height: 1.4;
 }
+
+.notification-button {
+  margin-top: 14px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 13px 21px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+
+  background: linear-gradient(
+    180deg,
+    #55b8f7 0%,
+    #1da1f2 48%,
+    #1685d1 100%
+  );
+
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.2px;
+
+  box-shadow:
+  0 5px 12px rgba(29, 161, 242, 0.22),
+  0 2px 3px rgba(22, 133, 209, 0.16),
+  inset 0 1px 0 rgba(255, 255, 255, 0.28),
+  inset 0 -1px 0 rgba(0, 90, 150, 0.15);
+
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+.notification-button:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.notification-button:active {
+  transform: scale(0.98);
+  filter: brightness(0.96);
+}
+
 .primary-button {
   position: relative;
   display: inline-flex;
@@ -187,7 +235,7 @@ textarea:focus-visible {
   gap: 12px;
 }
 .section-heading {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   align-items: start;
 }
 .section-heading h2,
@@ -203,7 +251,7 @@ textarea:focus-visible {
 }
 
 .help-card i {
-    color: #f89110;
+    color: #FC5F08;
 }
 .paw-badge {
     display: grid;
@@ -213,8 +261,8 @@ textarea:focus-visible {
     background: linear-gradient(
         180deg,
         #ffa32e 0%,
-        #f89110 55%,
-        #df7900 100%
+        #FD9111 55%,
+        #FC5F08 100%
     );
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 16px;
@@ -239,10 +287,11 @@ textarea:focus-visible {
   border-radius: 11px;
   background: white;
   color: #20332c;
+  box-shadow: rgba(208, 221, 254, 0.21) 0px 4px 12px;
 }
 .dog-card.selected {
-  background: #f0f8f1;
-  border-color: #78bd91;
+  /* background: #f0f8f1; */
+  /* border-color: #FC5F08; */
 }
 .dog-avatar {
   display: grid;
@@ -267,34 +316,60 @@ textarea:focus-visible {
   font-size: 12px;
   color: #78867d;
 }
-.dog-card-text small {
-  font-size: 10px;
-  color: #718078;
-}
 .status-dot {
   width: 8px;
   height: 8px;
-  background: #e0a342;
   border-radius: 50%;
   margin-left: auto;
   flex-shrink: 0;
+}
+p.form-hint.notification-subheading span {
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    color: #55b8f7 !important;
+    border: 1px solid #55b8f7;
+}
+h2.notification-heading {
+    margin: 0px;
+}
+p.form-hint.notification-hint {
+    margin-top: 10px;
+    line-height: 18px;
+}
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 25px;
+}
+.help-card-content {
+    text-align: left;
+}
+i.fa-solid.fa-circle-check {
+    font-size: 14px;
+}
+button.mark-found-button {
+    font-size: 16px;
 }
 .help-card {
     margin-top: 20px;
     padding: 17px;
     border-radius: 11px;
-    background: #fff0e2;
+    background: #f8911026;
     display: flex;
-    flex-direction: column;
     gap: 7px;
-    border: 1px solid #f89110;
+    border: 1px solid #FC5F08;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
 }
 .help-card > span {
   font-size: 22px;
 }
 .help-card strong {
   font-size: 13px;
-  color: #5f5f69;
+  color: black;
 }
 a.brand img {
     width: 100%;
@@ -945,7 +1020,7 @@ footer span:first-child {
     padding: 38px 0 0px;
   }
   .workspace {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .sidebar {
     order: 2;
@@ -1223,23 +1298,35 @@ img.stray-dog-two {
   border-inline: none !important;
 }
 
+i.fa-solid.fa-users {
+  font-size: 12px;
+}
+span.dog-card-text span.missing-label {
+    background-color: #f8911026;
+    color: #FD6B20;
+    padding: 0px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    display: flex;
+    gap: 1px;
+}
 .active-feed-badge {
     display: inline-flex;
     align-items: center;
     padding: 0px 10px;
     border-radius: 999px;
     background: #f8911026;
-    color: #dd7b00;
+    color: #FC5F08;
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.7px;
-    border: 1px solid #f89110;
+    border: 1px solid #FC5F08;
     line-height: 22px;
     gap: 4px;
 }
 
 .active-feed-info p {
-  margin-top: 16px;
+  margin-top: 12px;
 }
 .sighting-card {
     display: flex;

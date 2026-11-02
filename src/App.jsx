@@ -1221,16 +1221,19 @@ if (!dog) {
                 <span className="dog-card-text">
                   <strong>{item.name}</strong>
                   <span>{item.color || item.breed}</span>
-                  <small><i class="fa-regular fa-compass"></i> {item.lastSeen}</small>
+                  <span><i class="fa-solid fa-location-dot"></i> {item.lastSeen}</span>
+                  <span className="missing-label"><i class="fa-solid fa-triangle-exclamation"></i>Missing</span>
                 </span>
-                <span className="status-dot" />
+                <i class="status-dot fa-solid fa-chevron-right"></i>
               </button>
             ))}
 
             <div className="help-card">
-              <span><i class="fa-solid fa-hand-holding-heart"></i></span>
-              <strong>Every sighting matters.</strong>
-              <p>See a missing dog? Add a pin to help its family.</p>
+              <span><i class="fa-solid fa-heart"></i></span>
+              <div className="help-card-content">
+                <strong>Every sighting matters.</strong>
+                <p>See a missing dog? Add a pin to help its family.</p>
+              </div>
             </div>
           </aside>
 
@@ -1249,7 +1252,7 @@ if (!dog) {
               </div>
               <div className="report-actions">
         <button className="share-button" onClick={shareReport}>
-          <i class="fa-solid fa-share-nodes"></i> Share report
+          <i class="fa-solid fa-paper-plane"></i> Share with others
         </button>
 
   <FoundStatus
@@ -1759,21 +1762,6 @@ if (!dog) {
         <strong>{recoveryKeyToShow}</strong>
       </p>
 
-        
-      <button
-        type="button"
-        className="primary-button"
-        onClick={enableDogNotifications}
-        style={{ marginBottom: '12px' }}
-      >
-        <i className="fa-solid fa-bell"></i>
-        Enable sighting notifications
-      </button>
-
-      <p className="form-hint">
-        Optional: Get notified when someone reports a sighting of your dog.
-      </p>
-
         <div className="recovery-key-actions">
       <button
         type="button"
@@ -1805,6 +1793,27 @@ if (!dog) {
         I've saved my key
       </button>
       </div>
+
+      <div className="notification-header">
+        <h2 className="notification-heading">Get alerts when your dog is spotted</h2>
+        <p className="form-hint notification-subheading">
+        <span>Optional</span>
+      </p>
+      </div>
+      <p className="form-hint notification-hint">
+        Get notified when someone spots your dog. Enable notifications to receive an alert whenever a new sighting is reported.
+      </p>
+
+            <button
+        type="button"
+        className="notification-button"
+        onClick={enableDogNotifications}
+        style={{ marginBottom: '12px' }}
+      >
+        <i className="fa-solid fa-bell"></i>
+        Enable sighting notifications
+      </button>
+
     </div>
   </div>
 )}
