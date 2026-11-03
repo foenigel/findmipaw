@@ -6,7 +6,7 @@ import './App.css';
 import FoundStatus from './components/FoundStatus.jsx';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import logo from './components/images/findmipawlogo.png';
-import heroImage from './components/images/hero-dog-image.png';
+import heroImage from './components/images/hero-dog-banner.png';
 import strayDogOne from './components/images/stray-dog1.jpg';
 import strayDogTwo from './components/images/stray-dog2.jpg';
 import LoadingScreen from './components/LoadingScreen.jsx';

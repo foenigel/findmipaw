@@ -478,13 +478,13 @@ img.hero-image {
   gap: 7px;
 }
 .dog-details span {
-  font-size: 9px;
+  font-size: 11px;
   color: #8a968e;
   letter-spacing: 0.8px;
   font-weight: 800;
 }
 .dog-details strong {
-  font-size: 12px;
+  font-size: 18px;
   overflow-wrap: anywhere;
 }
 
@@ -637,6 +637,7 @@ p.map-instructions {
     line-height: 20px;
     margin: 14px auto;
     max-width: 400px;
+    text-align: left;
 }
 
 .pin-wrapper {
