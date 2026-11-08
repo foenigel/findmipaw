@@ -122,6 +122,11 @@ function App() {
   new URLSearchParams(window.location.search).get('dog') || ''
 );
   const [addingSighting, setAddingSighting] = useState(false);
+  const [locationSearch, setLocationSearch] = useState('');
+  const [locationResults, setLocationResults] = useState([]);
+  const [searchingLocation, setSearchingLocation] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
   const [sighting, setSighting] = useState({
   note: '',
   photo: '',
@@ -142,6 +147,7 @@ const [newDog, setNewDog] = useState({
   const [loadingDogs, setLoadingDogs] = useState(true);
   const [recoveryKeyToShow, setRecoveryKeyToShow] = useState('');
   const [recoveryDogIdToShow, setRecoveryDogIdToShow] = useState('');
+  const searchMarkerRef = useRef(null);
   const mapElement = useRef(null);
   const miniMapElement = useRef(null);
   const miniMapRef = useRef(null);
@@ -280,15 +286,14 @@ L.tileLayer(
       requestingLocationRef.current = false;
       selectingLocationRef.current = false;
 
-      setSighting({
-        note: '',
-        photo: '',
-        lat: event.latlng.lat,
-        lng: event.latlng.lng,
-      });
+    pinSightingLocation(
+      event.latlng.lat,
+      event.latlng.lng
+    );
 
-      setAddingSighting(true);
-      setNotice('Location found! Add the sighting details.');
+    setAddingSighting(true);
+    setLocationPickerOpen(false);
+    setNotice('Location found! Add the sighting details.');
     });
 
     map.on('locationerror', () => {
@@ -317,20 +322,14 @@ map.on('click', (event) => {
     return;
   }
 
-  // Selecting a location for a community sighting.
-  if (!selectingLocationRef.current) return;
 
-  selectingLocationRef.current = false;
-
-  setSighting({
-    note: '',
-    photo: '',
-    lat: event.latlng.lat,
-    lng: event.latlng.lng,
-  });
-
-  setAddingSighting(true);
-  setNotice('Location selected! Add the sighting details.');
+// Allow the user to adjust the sighting pin on the map.
+if (selectingLocationRef.current) {
+  pinSightingLocation(
+    event.latlng.lat,
+    event.latlng.lng
+  );
+}
 });
 
     setTimeout(() => map.invalidateSize(), 100);
@@ -437,6 +436,83 @@ useEffect(() => {
     });
 
   }, [dog]);
+
+  async function searchForLocation() {
+  const query = locationSearch.trim();
+
+  if (!query) {
+    setNotice('Enter a street, area, or location to search.');
+    return;
+  }
+
+  setSearchingLocation(true);
+  setLocationResults([]);
+
+  try {
+    const params = new URLSearchParams({
+      format: 'jsonv2',
+      q: query,
+      countrycodes: 'bz',
+      limit: '5',
+    });
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?${params}`
+    );
+
+    if (!response.ok) throw new Error('Location search failed.');
+
+    const results = await response.json();
+
+    setLocationResults(results);
+
+    if (results.length === 0) {
+      setNotice('No locations found. Try another search.');
+    }
+  } catch (error) {
+    console.error('Location search error:', error);
+    setNotice('Could not search for that location. Please try again.');
+  } finally {
+    setSearchingLocation(false);
+  }
+}
+
+function pinSightingLocation(lat, lng) {
+  const map = mapRef.current;
+  if (!map) return;
+
+  if (searchMarkerRef.current) {
+    searchMarkerRef.current.setLatLng([lat, lng]);
+  } else {
+    searchMarkerRef.current = L.marker([lat, lng], {
+  icon: L.divIcon({
+    className: 'pin-wrapper',
+    html: '<div class="map-pin sighting-pin">👀</div>',
+    iconSize: [38, 38],
+    iconAnchor: [19, 35],
+  }),
+}).addTo(map);
+  }
+
+  map.setView([lat, lng], 16);
+
+  setSelectedLocation({ lat, lng });
+  setSighting((current) => ({
+    ...current,
+    lat,
+    lng,
+  }));
+}
+
+function useSelectedLocation() {
+  if (!selectedLocation) return;
+
+  selectingLocationRef.current = false;
+  setAddingSighting(true);
+  setLocationPickerOpen(false);
+  setLocationResults([]);
+  setNotice('Location selected! Add the sighting details.');
+}
 
   function selectDog(id) {
     setSelectedId(id);
@@ -1298,6 +1374,8 @@ if (!dog) {
               Choose how you'd like to share the location.
             </p>
 
+
+
             <button
               type="button"
               className="primary-button sighting-button"
@@ -1308,6 +1386,7 @@ if (!dog) {
                 selectingLocationRef.current = false;
 
                 setNotice('Finding your location...');
+                setSelectedLocation(null);
 
                 mapRef.current.locate({
                 setView: false,
@@ -1323,6 +1402,103 @@ if (!dog) {
 
             <div className="map-container" ref={mapElement} />
 
+
+                        <button
+            type="button"
+            className="primary-button sighting-button"
+            onClick={() => {
+              setLocationPickerOpen(true);
+              setLocationResults([]);
+              setSelectedLocation(null);
+              setSighting({
+                note: '',
+                photo: '',
+                lat: null,
+                lng: null,
+              });
+              selectingLocationRef.current = true;
+              setNotice('Search for a location or tap the map to drop a pin.');
+            }}
+          >
+            <span className="button-main">
+              <i className="fa-solid fa-map-location-dot"></i>
+              Search or choose on map
+            </span>
+            <span className="button-hint">
+              Find a street or select a spot manually
+            </span>
+          </button>
+
+          {locationPickerOpen && (
+  <div className="location-picker">
+    <label htmlFor="sighting-location-search">
+      Search for a street or location
+    </label>
+
+    <div className="location-search-row">
+      <input
+        id="sighting-location-search"
+        type="search"
+        placeholder="e.g. Orange Walk Town"
+        value={locationSearch}
+        onChange={(e) => setLocationSearch(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            searchForLocation();
+          }
+        }}
+      />
+
+      <button
+        type="button"
+        className="primary-button"
+        onClick={searchForLocation}
+        disabled={searchingLocation}
+      >
+        {searchingLocation ? 'Searching...' : 'Search'}
+      </button>
+    </div>
+
+{locationResults.length > 0 && (
+  <>
+    <p className="form-hint">
+      {locationResults.length} location(s) found. Tap one to place your pin:
+    </p>
+    <div className="location-results">
+        {locationResults.map((result) => (
+          <button
+            type="button"
+            key={result.place_id}
+            onClick={() => {
+              pinSightingLocation(
+                Number(result.lat),
+                Number(result.lon)
+              );
+              selectingLocationRef.current = true;
+              setLocationResults([]);
+            }}
+          >
+            <i className="fa-solid fa-location-dot"></i>
+            {result.display_name}
+          </button>
+        ))}
+      </div>
+      </>
+    )}
+
+    {selectedLocation && (
+      <button
+        type="button"
+        className="primary-button"
+        onClick={useSelectedLocation}
+      >
+        <i className="fa-solid fa-check"></i> Use this location
+      </button>
+    )}
+  </div>
+)}
+
             <div className="map-legend">
               <span>
                 <i className="legend-red" /> Last known location
@@ -1331,25 +1507,6 @@ if (!dog) {
                 <i className="legend-blue" /> Reported sighting
               </span>
             </div>
-
-           <button
-              type="button"
-              className="primary-button sighting-button"
-              onClick={() => {
-                setAddingSighting(false);
-                selectingLocationRef.current = true;
-                setSighting({ note: '', photo: '', lat: null, lng: null });
-                setNotice('Tap the map at the exact location of the sighting.');
-              }}
-            >
-              <span className="button-main">
-                <i className="fa-solid fa-location-dot"></i>
-                Choose a different location
-              </span>
-              <span className="button-hint">
-                Select where you spotted the dog on the map
-              </span>
-            </button>
 
             <div className="sightings-list">
               <h3><i class="fa-regular fa-eye"></i> Recent sightings</h3>

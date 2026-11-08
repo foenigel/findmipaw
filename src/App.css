@@ -165,7 +165,7 @@ textarea:focus-visible {
   );
 
   color: #ffffff;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 650;
   letter-spacing: -0.2px;
 
@@ -493,13 +493,13 @@ img.hero-image {
 }
 .map-title h3,
 .sightings-list h3 {
-  font: 700 15px 'Plus Jakarta Sans', sans-serif;
+  font: 700 17px 'Plus Jakarta Sans', sans-serif;
   margin: 0 0 5px;
 }
 .map-title p {
   margin: 0;
   color: #5f5f69;
-  font-size: 11px;
+  font-size: 15px;
 }
 i.fa-solid.fa-street-view {
     font-size: 19px;
@@ -548,7 +548,7 @@ i.fa-solid.fa-street-view {
   align-items: center;
   gap: 7px;
   color: #5f5f69;
-  font-size: 11px;
+  font-size: 14px;
 }
 .map-legend i {
   width: 9px;
@@ -616,11 +616,11 @@ i.fa-solid.fa-street-view {
   background: #eef4ff;
 }
 .sighting-item strong {
-  font-size: 12px;
+  font-size: 15px;
 }
 .sighting-item p {
   margin: 5px 0;
-  font-size: 12px;
+  font-size: 15px;
   color: #67766c;
   line-height: 1.5;
   order: 3;
@@ -633,10 +633,10 @@ i.fa-solid.fa-street-view {
 }
 p.map-instructions {
     color: #5f5f69;
-    font-size: 11px;
+    font-size: 15px;
     line-height: 20px;
     margin: 14px auto;
-    max-width: 400px;
+    max-width: 430px;
     text-align: left;
 }
 
@@ -773,7 +773,7 @@ footer span:first-child {
   resize: vertical;
 }
 .form-hint {
-  font-size: 11px;
+  font-size: 13px;
   color: #77877b;
 }
 
@@ -1547,4 +1547,97 @@ span.dog-card-text span.missing-label {
   .loading-spinner {
     animation: none;
   }
+}
+
+.location-picker {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 12px;
+}
+
+.location-search-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.location-search-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.location-search-row button {
+  flex-shrink: 0;
+}
+
+.location-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.location-results button {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  text-align: left;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  background: var(--input-bg, #fff);
+  color: inherit;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.location-results button i {
+  margin-top: 3px;
+}
+
+.location-picker > .primary-button {
+  width: 100%;
+  margin-top: 12px;
+}
+
+@media (max-width: 480px) {
+  .location-search-row {
+    flex-direction: column;
+  }
+}
+
+input#sighting-location-search {
+    border-radius: 12px;
+    border: 1px solid #43bd87;
+    background: none;
+    padding: 0px 15px;
+}
+.location-search-row input::placeholder {
+  color:#a9a9a98a;
+  font-size: 16px;
+}
+
+.map-container.leaflet-container.leaflet-touch.leaflet-fade-anim.leaflet-grab.leaflet-touch-drag.leaflet-touch-zoom {
+    margin: 20px 0px;
+}
+
+.location-picker p.form-hint {
+    margin-top: 20px;
+}
+
+.location-search-row input {
+  background-color: #fff !important;
+}
+
+.location-search-row input:-webkit-autofill,
+.location-search-row input:-webkit-autofill:hover,
+.location-search-row input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+  -webkit-text-fill-color: #222 !important;
+}
+.location-search-row input:focus {
+  color: #000 !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
