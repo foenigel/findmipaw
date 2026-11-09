@@ -253,7 +253,7 @@ function Navigation({ target, onClose }) {
 </div>
         <div className="navigation-status">
   <span className={userLocation ? 'gps-active' : 'gps-waiting'} />
-        <div>
+        <div className="navigation-status-text">
             <strong>{userLocation ? 'GPS connected' : 'Waiting for GPS location'}</strong>
             <p>{status}</p>
         </div>
