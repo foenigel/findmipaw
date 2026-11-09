@@ -405,6 +405,11 @@ img.hero-image {
   .report-heading {
     flex-direction: column;
   }
+  main.page {
+    padding: 0px;
+    width: 100%;
+    max-width: 100%;
+  }
 }
 .missing-label {
   display: inline-flex;
@@ -1020,7 +1025,7 @@ footer span:first-child {
     padding: 0 14px;
   }
   .hero {
-    padding: 38px 0 0px;
+    padding: 38px 12px 0px;
   }
   .workspace {
     grid-template-columns: minmax(0, 1fr);
@@ -1028,6 +1033,9 @@ footer span:first-child {
   .sidebar {
     order: 2;
   }
+  .section-heading p, .report-heading p {
+    font-size: 14px;
+}
   .report-panel {
     order: 1;
     padding: 17px;
@@ -1040,7 +1048,7 @@ footer span:first-child {
     letter-spacing: 0.5px;
   }
   .dog-details strong {
-    font-size: 11px;
+    font-size: 14px;
   }
   footer {
     flex-direction: column;

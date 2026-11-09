@@ -17,6 +17,7 @@ function Navigation({ target, onClose }) {
   const [distance, setDistance] = useState(null);
   const [duration, setDuration] = useState(null);
   const [status, setStatus] = useState('Finding your location...');
+  const [gpsError, setGpsError] = useState('');
   const [routeLoading, setRouteLoading] = useState(false);
 
   function calculateDistance(start, end) {
@@ -136,7 +137,8 @@ function Navigation({ target, onClose }) {
         };
 
         setUserLocation(current);
-        setStatus('GPS location active');
+        setStatus('Location Active');
+        setGpsError('');
 
         const userIcon = L.divIcon({
           className: 'navigation-pin-wrapper',
@@ -175,27 +177,29 @@ function Navigation({ target, onClose }) {
           );
         }
       },
-      (error) => {
-  console.warn('GPS unavailable:', error.message);
+        (error) => {
+        console.warn('GPS unavailable:', error.message);
 
-  if (error.code === 1) {
-    setStatus(
-      'Location access is blocked. Open your device or browser settings, find Location or Site Permissions, allow location access for FindMiPaw, then reload this page.'
-    );
-  } else if (error.code === 2) {
-    setStatus(
-      'We cannot detect your location yet. Make sure Location Services are enabled on your device, allow location access for your browser, and try moving outdoors.'
-    );
-  } else if (error.code === 3) {
-    setStatus(
-      'Your location is taking too long to load. Check your internet connection, make sure location access is enabled, and try again somewhere with a clearer GPS signal.'
-    );
-  } else {
-    setStatus(
-      'We could not access your location. Check your device location settings and browser permissions, then try again.'
-    );
-  }
-},
+        setStatus('Location Inactive');
+
+        if (error.code === 1) {
+            setGpsError(
+            'Location access is blocked. Open your device or browser settings, find Location or Site Permissions, allow location access for FindMiPaw, then reload this page.'
+            );
+        } else if (error.code === 2) {
+            setGpsError(
+            'We cannot detect your location yet. Make sure Location Services are enabled on your device, allow location access for your browser, and try moving outdoors.'
+            );
+        } else if (error.code === 3) {
+            setGpsError(
+            'Your location is taking too long to load. Check your internet connection, make sure location access is enabled, and try again somewhere with a clearer GPS signal.'
+            );
+        } else {
+            setGpsError(
+            'We could not access your location. Check your device location settings and browser permissions, then try again.'
+            );
+        }
+        },
       {
         enableHighAccuracy: true,
         maximumAge: 5000,
@@ -225,22 +229,34 @@ function Navigation({ target, onClose }) {
 
   return (
     <div className="navigation-screen">
-      <header className="navigation-header">
+        <div className="navigation-header">
         <button
           type="button"
           className="navigation-back"
           onClick={onClose}
         >
-          <i className="fa-solid fa-arrow-left"></i> Back to report
+          <i className="fa-solid fa-arrow-left"></i> Go Back Home
+        </button><span className="navigationheader-subtitle">See how close your dog is.</span>
+        
+        </div>
+      {/* <header className="navigation-header">
+        <button
+          type="button"
+          className="navigation-back"
+          onClick={onClose}
+        >
+          <i className="fa-solid fa-arrow-left"></i> Back Home
         </button>
 
-        <div>
+        <div className="navigation-header-title">
           <h2>Navigate to sighting</h2>
           <p>{target.label || 'Reported dog sighting'}</p>
         </div>
-      </header>
+      </header> */}
 
+    <div className="navigationmap-container">
    <div className="navigation-map" ref={mapElement} />
+    </div>
 
 <section className="navigation-info">
 
@@ -252,12 +268,20 @@ function Navigation({ target, onClose }) {
   </p>
 </div>
         <div className="navigation-status">
-  <span className={userLocation ? 'gps-active' : 'gps-waiting'} />
+        <span className={userLocation ? 'gps-active' : 'gps-waiting'} />
+
         <div className="navigation-status-text">
-            <strong>{userLocation ? 'GPS connected' : 'Waiting for GPS location'}</strong>
+            <strong>{userLocation ? 'GPS Connected' : 'GPS Not Connected'}</strong>
             <p>{status}</p>
         </div>
         </div>
+
+        {gpsError && (
+        <div className="navigation-gps-message">
+            <strong>Location assistance</strong>
+            <p>{gpsError}</p>
+        </div>
+        )}
 
         <div className="navigation-stats">
           <div>
