@@ -145,7 +145,10 @@ textarea:focus-visible {
   transform: scale(0.98);
   filter: brightness(0.96);
 }
-
+.notification-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+}
 .primary-button {
   position: relative;
   display: inline-flex;
@@ -230,7 +233,7 @@ textarea:focus-visible {
 .report-heading,
 .map-title {
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: space-between;
   gap: 12px;
 }
@@ -635,7 +638,7 @@ p.map-instructions {
     color: #5f5f69;
     font-size: 15px;
     line-height: 20px;
-    margin: 14px auto;
+    margin: 16px auto;
     max-width: 430px;
     text-align: left;
 }
@@ -1333,6 +1336,7 @@ span.dog-card-text span.missing-label {
     display: flex;
     flex-direction: column;
     align-items: start;
+    width: 100%;
 }
 .sighting-card strong {
   order: 2;
@@ -1437,7 +1441,27 @@ span.dog-card-text span.missing-label {
     margin: auto;
 }
 }
-
+.navigation-sighting-button {
+    margin-top: 14px;
+    width: 100%;
+    order: 4;
+}
+.sighting-card button.navigation-sighting-button {
+    background: linear-gradient(
+        180deg,
+        #9acaff 0%,
+        #73b4ff 55%,
+        #4c96ed 100%
+    );
+    color: white;
+    border: 1px solid #73b4ff;
+    padding: 10px 20px;
+    border-radius: 12px;
+    gap: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 .theme-toggle {
     position: relative;
     display: flex;

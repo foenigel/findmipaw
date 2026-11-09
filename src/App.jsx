@@ -10,6 +10,8 @@ import heroImage from './components/images/hero-dog-banner.png';
 import strayDogOne from './components/images/stray-dog1.jpg';
 import strayDogTwo from './components/images/stray-dog2.jpg';
 import LoadingScreen from './components/LoadingScreen.jsx';
+import Navigation from './components/Navigation.jsx';
+
 
 async function compressImage(file) {
   return new Promise((resolve, reject) => {
@@ -122,6 +124,7 @@ function App() {
   new URLSearchParams(window.location.search).get('dog') || ''
 );
   const [addingSighting, setAddingSighting] = useState(false);
+  const [navigationTarget, setNavigationTarget] = useState(null);
   const [locationSearch, setLocationSearch] = useState('');
   const [locationResults, setLocationResults] = useState([]);
   const [searchingLocation, setSearchingLocation] = useState(false);
@@ -338,7 +341,7 @@ if (selectingLocationRef.current) {
       map.remove();
       mapRef.current = null;
     };
-}, [loadingDogs, Boolean(dog)]);
+}, [loadingDogs, Boolean(dog), navigationTarget]);
 
 
 useEffect(() => {
@@ -435,7 +438,7 @@ useEffect(() => {
         .addTo(markers);
     });
 
-  }, [dog]);
+ }, [dog, navigationTarget]);
 
   async function searchForLocation() {
   const query = locationSearch.trim();
@@ -996,7 +999,17 @@ if (loadingDogs) {
   return <LoadingScreen />;
 }
 
+if (navigationTarget) {
+  return (
+    <Navigation
+      target={navigationTarget}
+      onClose={() => setNavigationTarget(null)}
+    />
+  );
+}
+
 if (!dog) {
+
   return (
     <div className="app">
       <header className="topbar">
@@ -1367,12 +1380,13 @@ if (!dog) {
               <div className="map-title-text">
                 <h3>Community sightings map</h3>
                 <p>Where did you see this dog?</p>
+                 <p className="map-instructions">
+                Choose how you'd like to share the location.
+                </p>
               </div>
             </div>
 
-            <p className="map-instructions">
-              Choose how you'd like to share the location.
-            </p>
+           
 
 
 
@@ -1532,6 +1546,24 @@ if (!dog) {
                         )}
 
                         <small>{item.time}</small>
+
+                  {item.lat != null && item.lng != null && (
+                    <button
+                      type="button"
+                      className="navigation-sighting-button"
+                      onClick={() =>
+                        setNavigationTarget({
+                          lat: Number(item.lat),
+                          lng: Number(item.lng),
+                          label: `${dog.name} sighting`,
+                        })
+                      }
+                    >
+                      <i className="fa-solid fa-location-arrow"></i>
+                      Navigate to this sighting
+                    </button>
+                  )}
+
                       </div>
                     </div>
                   ))
