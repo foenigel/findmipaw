@@ -1,10 +1,11 @@
 
 .navigation-screen {
   min-height: 100vh;
-  background: var(--page-bg, #f7f8fa);
+  background: var(--page-bg, #ffffff);
   color: var(--text-color, #222);
   display: flex;
   flex-direction: column;
+  padding: 0px 10px;
 }
 
 .navigation-header {
@@ -13,7 +14,11 @@
   flex-direction: column;
   gap: 16px;
   background: var(--card-bg, #fff);
-  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  /* border-bottom: 1px solid var(--border-color, #e5e7eb); */
+}
+
+.navigation-legend {
+    margin: 20px 0px;
 }
 
 .navigation-back {
@@ -26,10 +31,14 @@
   cursor: pointer;
   padding: 4px 0;
 }
+.navigation-map.leaflet-container.leaflet-touch.leaflet-fade-anim.leaflet-grab.leaflet-touch-drag.leaflet-touch-zoom {
+    border-radius: 20px;
+}
 
 .navigation-header h2 {
   margin: 0;
   font-size: 1.35rem;
+  color: black;
 }
 
 .navigation-header p {

@@ -244,19 +244,13 @@ function Navigation({ target, onClose }) {
 
 <section className="navigation-info">
 
-  <div className="navigation-help">
-    <strong>Live GPS Navigation</strong>
-    <p>
-      Find your way to this reported dog sighting. Allow location access
-      so FindMiPaw can show your current position and calculate your distance.
-    </p>
-
-    <div className="navigation-legend">
-      <span>👀 Dog sighting location</span>
-      <span>🔵 Your current location</span>
-      <span>🔵 Blue line = driving route</span>
-    </div>
-  </div>
+<div className="navigation-help">
+  <strong>Live GPS Navigation</strong>
+  <p>
+    Follow your live location on the map to reach the reported dog sighting.
+    Allow location access to see your position, route, and distance.
+  </p>
+</div>
         <div className="navigation-status">
   <span className={userLocation ? 'gps-active' : 'gps-waiting'} />
         <div>
