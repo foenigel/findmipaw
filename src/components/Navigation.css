@@ -103,6 +103,20 @@ span.navigationheader-subtitle {
 .navigation-status-text strong {
     padding-left: 4px;
 }
+.navigation-gps-message {
+    margin-bottom: 20px;
+}
+.navigation-gps-message strong {
+    color: red;
+    font-size: 16px;
+}
+.navigation-gps-message{
+    background-color: #FEE2E2;
+    padding: 10px;
+    font-size: 15px;
+    line-height: 18px;
+    border-radius: 12px;
+}
 .navigation-help p {
     margin-top: 10px;
     max-width: 550px;
@@ -111,6 +125,7 @@ span.navigationheader-subtitle {
     color: #939393;
     line-height: 21px;
     text-align: left;
+    font-size: 15px;
 }
 .gps-active,
 .gps-waiting {
