@@ -94,13 +94,14 @@
 }
 span.navigationheader-subtitle {
     color: white;
-    padding-left: 22px;
+    padding-left: 28px;
+    width: fit-content;
 }
 .navigation-help strong {
     font-size: 20px;
 }
 .navigation-status-text strong {
-    padding-left: 10px;
+    padding-left: 4px;
 }
 .navigation-help p {
     margin-top: 10px;
@@ -247,5 +248,8 @@ span.navigationheader-subtitle {
   }
   .navigation-header{
     padding: 20px 10px;
+  }
+  .navigationmap-container {
+    margin-bottom: 10px;
   }
 }
